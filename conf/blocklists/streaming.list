@@ -1,0 +1,56 @@
+# childwaf blocklist – Video / Music Streaming Services
+#
+# Remove lines for services you wish to allow (e.g. allow Netflix but block TikTok).
+
+# ── Video on demand ───────────────────────────────────────────────────────────
+netflix.com
+nflxext.com
+nflximg.com
+nflxso.net
+primevideo.com
+amazon.com          # covers Prime Video if you want to block Amazon entirely
+disneyplus.com
+dssott.com          # Disney+ CDN
+hulu.com
+max.com
+hbomax.com
+peacocktv.com
+paramountplus.com
+crunchyroll.com
+funimation.com
+mubi.com
+curiositystream.com
+nebula.tv
+
+# ── Live / sports streaming ───────────────────────────────────────────────────
+dazn.com
+espn.com
+fubo.tv
+sling.com
+directvstream.com
+
+# ── Short video ───────────────────────────────────────────────────────────────
+youtube.com
+youtu.be
+googlevideo.com     # YouTube video CDN
+ytimg.com           # YouTube image/assets CDN
+vimeo.com
+dailymotion.com
+twitch.tv
+twitchapps.com
+
+# ── Music streaming ───────────────────────────────────────────────────────────
+spotify.com
+scdn.co             # Spotify CDN
+soundcloud.com
+deezer.com
+tidal.com
+napster.com
+pandora.com
+iheartradio.com
+mixcloud.com
+
+# ── Podcast platforms ─────────────────────────────────────────────────────────
+anchor.fm
+buzzsprout.com
+podbean.com
