@@ -1,0 +1,64 @@
+# childwaf blocklist – Social Media
+#
+# Blocks access to major social networking and messaging platforms.
+# Remove any line to allow that service.
+
+# ── Meta ──────────────────────────────────────────────────────────────────────
+facebook.com
+messenger.com
+instagram.com
+threads.net
+
+# ── Twitter / X ───────────────────────────────────────────────────────────────
+twitter.com
+x.com
+t.co
+
+# ── TikTok ────────────────────────────────────────────────────────────────────
+tiktok.com
+tiktokv.com
+musical.ly
+
+# ── Snapchat ──────────────────────────────────────────────────────────────────
+snapchat.com
+snap.com
+
+# ── Pinterest ─────────────────────────────────────────────────────────────────
+pinterest.com
+pinterest.de
+pinterest.fr
+pinterest.co.uk
+
+# ── Reddit ────────────────────────────────────────────────────────────────────
+reddit.com
+redd.it
+redditstatic.com
+
+# ── Tumblr ────────────────────────────────────────────────────────────────────
+tumblr.com
+
+# ── LinkedIn ──────────────────────────────────────────────────────────────────
+linkedin.com
+
+# ── Messaging ─────────────────────────────────────────────────────────────────
+discord.com
+discordapp.com
+telegram.org
+signal.org
+kik.com
+viber.com
+line.me
+wechat.com
+whatsapp.com
+whatsapp.net
+
+# ── Video (social aspects) ───────────────────────────────────────────────────
+# Note: YouTube and Twitch are also in streaming.list
+# Include here if you want them blocked even outside streaming hours.
+# youtube.com
+# twitch.tv
+
+# ── Dating ────────────────────────────────────────────────────────────────────
+tinder.com
+bumble.com
+badoo.com

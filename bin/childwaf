@@ -1,0 +1,229 @@
+#!/bin/bash
+# childwaf – Internet Filter Management Tool
+#
+# Usage: childwaf <command> [options]
+#
+# Commands:
+#   start    Apply all filtering rules
+#   stop     Remove all filtering rules (open access for all)
+#   restart  Stop then start
+#   reload   Reload config without removing existing connections
+#   status   Show active rules and child profiles
+#   check    Verify system dependencies
+#   help     Show this help
+#
+# Configuration: /etc/childwaf/childwaf.conf
+# Child profiles: /etc/childwaf/children/<name>.conf
+
+set -euo pipefail
+
+# ─── Locate library directory ─────────────────────────────────────────────────
+# Support running directly from the source tree (./bin/childwaf) as well as
+# from the installed location (/usr/local/sbin/childwaf).
+_self_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+if [[ -d "${_self_dir}/../lib" && -f "${_self_dir}/../lib/common.sh" ]]; then
+    # Running from source tree
+    CHILDWAF_LIB=$(cd "${_self_dir}/../lib" && pwd)
+    CHILDWAF_CONF_MAIN="${CHILDWAF_CONF_MAIN:-$(cd "${_self_dir}/../conf" && pwd)/childwaf.conf}"
+else
+    CHILDWAF_LIB="${CHILDWAF_LIB:-/usr/local/lib/childwaf}"
+    CHILDWAF_CONF_MAIN="${CHILDWAF_CONF_MAIN:-/etc/childwaf/childwaf.conf}"
+fi
+
+export CHILDWAF_LIB CHILDWAF_CONF_MAIN
+
+# shellcheck source=../lib/common.sh
+source "${CHILDWAF_LIB}/common.sh"
+# shellcheck source=../lib/dns.sh
+source "${CHILDWAF_LIB}/dns.sh"
+# shellcheck source=../lib/iptables.sh
+source "${CHILDWAF_LIB}/iptables.sh"
+
+# ─── Commands ─────────────────────────────────────────────────────────────────
+
+cmd_start() {
+    load_config
+    log_info "=== childwaf start ==="
+    [[ "${MODULE_DNS:-yes}"      == "yes" ]] && module_dns_start
+    [[ "${MODULE_IPTABLES:-yes}" == "yes" ]] && module_iptables_start
+    log_info "=== childwaf running ==="
+}
+
+cmd_stop() {
+    load_config
+    log_info "=== childwaf stop ==="
+    [[ "${MODULE_IPTABLES:-yes}" == "yes" ]] && module_iptables_stop
+    [[ "${MODULE_DNS:-yes}"      == "yes" ]] && module_dns_stop
+    log_info "=== childwaf stopped – all filtering removed ==="
+}
+
+cmd_restart() {
+    cmd_stop
+    cmd_start
+}
+
+cmd_reload() {
+    load_config
+    log_info "=== childwaf reload ==="
+    [[ "${MODULE_DNS:-yes}"      == "yes" ]] && module_dns_reload
+    [[ "${MODULE_IPTABLES:-yes}" == "yes" ]] && module_iptables_reload
+    log_info "=== reload complete ==="
+}
+
+cmd_status() {
+    load_config
+
+    echo "╔══════════════════════════════════════════╗"
+    echo "║           childwaf  status               ║"
+    echo "╚══════════════════════════════════════════╝"
+    echo ""
+
+    echo "── Child profiles ──────────────────────────"
+    local found=0
+    for conf in "${CHILDWAF_CONF}/children/"*.conf; do
+        [[ -f "${conf}" ]] || continue
+        local cid
+        cid=$(basename "${conf}" .conf)
+        [[ "${cid}" == "example" ]] && continue
+        found=1
+
+        load_child_config "${conf}"
+        local chain
+        chain=$(_child_chain_name "${cid}")
+        local ipset_status="inactive"
+        ipset list "childwaf_child_${cid}" &>/dev/null && ipset_status="active"
+        local chain_status="inactive"
+        iptables -n -L "${chain}" &>/dev/null 2>&1 && chain_status="active"
+
+        printf "  %-12s  IP: %-20s  ipset: %-8s  chain: %s\n" \
+            "${cid}" "${IP}" "${ipset_status}" "${chain_status}"
+        printf "               categories: %s\n" "${BLOCK_CATEGORIES:-none}"
+    done
+    [[ "${found}" -eq 1 ]] || echo "  (no child profiles configured)"
+    echo ""
+
+    echo "── iptables chains ─────────────────────────"
+    for chain in CHILDWAF_FILTER CHILDWAF_NAT; do
+        local tbl=filter
+        [[ "${chain}" == "CHILDWAF_NAT" ]] && tbl=nat
+        if iptables -t "${tbl}" -n -L "${chain}" &>/dev/null 2>&1; then
+            local count
+            count=$(iptables -t "${tbl}" -n -L "${chain}" 2>/dev/null | grep -c "^[A-Z]" || true)
+            printf "  %-20s  active   (%d rules)\n" "${chain}" "${count}"
+        else
+            printf "  %-20s  inactive\n" "${chain}"
+        fi
+    done
+    echo ""
+
+    echo "── DNS (dnsmasq) ───────────────────────────"
+    local ipset_conf="${DNSMASQ_CONF_D:-/etc/dnsmasq.d}/childwaf-ipsets.conf"
+    if [[ -f "${ipset_conf}" ]]; then
+        local domain_count
+        domain_count=$(grep -c "^ipset=" "${ipset_conf}" 2>/dev/null || echo 0)
+        echo "  childwaf-ipsets.conf  present  (${domain_count} domains)"
+    else
+        echo "  childwaf-ipsets.conf  absent"
+    fi
+    if pgrep -x dnsmasq &>/dev/null; then
+        echo "  dnsmasq process:      running"
+    else
+        echo "  dnsmasq process:      stopped"
+    fi
+}
+
+cmd_check() {
+    echo "── Checking dependencies ───────────────────"
+    local all_ok=true
+
+    for tool in iptables iptables-restore ipset dnsmasq; do
+        if command -v "${tool}" &>/dev/null; then
+            echo "  [OK]      ${tool}"
+        else
+            echo "  [MISSING] ${tool}"
+            all_ok=false
+        fi
+    done
+
+    echo ""
+    echo "── Checking kernel modules ─────────────────"
+    for mod in xt_set xt_time ip_set ip_set_hash_ip ip_set_hash_net; do
+        if modinfo "${mod}" &>/dev/null 2>&1 || \
+           grep -q "${mod}" /proc/modules 2>/dev/null; then
+            echo "  [OK]      ${mod}"
+        else
+            echo "  [WARN]    ${mod}  (may be built-in – will fail at runtime if absent)"
+        fi
+    done
+
+    echo ""
+    echo "── Checking configuration ──────────────────"
+    local main_conf="${CHILDWAF_CONF_MAIN:-/etc/childwaf/childwaf.conf}"
+    if [[ -f "${main_conf}" ]]; then
+        echo "  [OK]      main config: ${main_conf}"
+    else
+        echo "  [MISSING] main config: ${main_conf}"
+        all_ok=false
+    fi
+
+    local child_dir
+    child_dir=$(dirname "${main_conf}")/children
+    local child_count
+    child_count=$(find "${child_dir}" -maxdepth 1 -name "*.conf" \
+                  ! -name "example.conf" 2>/dev/null | wc -l)
+    if [[ "${child_count}" -gt 0 ]]; then
+        echo "  [OK]      child profiles: ${child_count} found"
+    else
+        echo "  [WARN]    child profiles: none found (copy conf/children/example.conf)"
+        all_ok=false
+    fi
+
+    echo ""
+    ${all_ok} && echo "All required checks passed." \
+              || echo "Some issues found – see warnings above."
+}
+
+cmd_help() {
+    cat <<'EOF'
+childwaf – Internet Filter for Children's Devices
+
+Usage: childwaf <command>
+
+Commands:
+  start     Apply all DNS and iptables filtering rules
+  stop      Remove all rules (restores unrestricted access)
+  restart   Stop then start (use after major config changes)
+  reload    Regenerate and reload config (no traffic interruption)
+  status    Display active children, ipsets, and iptables chains
+  check     Verify all dependencies and configuration files
+  help      Show this help text
+
+Configuration files:
+  /etc/childwaf/childwaf.conf          Main settings
+  /etc/childwaf/children/<name>.conf   One file per child
+  /etc/childwaf/blocklists/<cat>.list  Domain lists per category
+  /etc/childwaf/allowlists/<name>.list Domain allowlists (future)
+
+Quick start:
+  1. Copy /etc/childwaf/children/example.conf → alice.conf
+  2. Set IP= to the child's device IP address
+  3. Set BLOCK_CATEGORIES and schedule
+  4. Run: childwaf reload
+EOF
+}
+
+# ─── Dispatch ─────────────────────────────────────────────────────────────────
+case "${1:-help}" in
+    start)   cmd_start   ;;
+    stop)    cmd_stop    ;;
+    restart) cmd_restart ;;
+    reload)  cmd_reload  ;;
+    status)  cmd_status  ;;
+    check)   cmd_check   ;;
+    help|--help|-h) cmd_help ;;
+    *)
+        echo "Unknown command: ${1}" >&2
+        echo "Run 'childwaf help' for usage." >&2
+        exit 1
+        ;;
+esac

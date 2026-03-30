@@ -1,0 +1,15 @@
+# childwaf blocklist – Custom / User-defined Domains
+#
+# Add any domains here that don't fit the built-in categories.
+# Reference this list in a child profile with:
+#   BLOCK_CATEGORIES="... custom"
+#
+# Format:
+#   - One domain per line
+#   - Subdomains are covered automatically (e.g. "example.com" also blocks
+#     "www.example.com", "sub.example.com", etc.)
+#   - Lines beginning with # are comments
+#   - Inline comments are also supported:  example.com  # reason
+
+# ── Add your custom entries below ─────────────────────────────────────────────
+

@@ -1,0 +1,32 @@
+# childwaf allowlist – Example / Template
+#
+# Domains listed here will be explicitly allowed even if they appear in a
+# blocklist category assigned to a child.
+#
+# HOW TO USE
+# ──────────
+# 1. Copy this file:  cp example.list kids-education.list
+# 2. Add domains to allow.
+# 3. Reference it in the child profile:
+#      ALLOW_DOMAINS="khanacademy.org scratch.mit.edu"
+#    (individual domains can also be listed directly in the child profile)
+#
+# NOTE: Allowlist enforcement via iptables ipsets is planned for a future
+#       release. Currently, ALLOW_DOMAINS in child profiles is informational
+#       and used only for dnsmasq server= directives (ensuring proper
+#       resolution even when the domain is in a blocked category).
+#
+# Format: one domain per line; comments with #
+
+# ── Educational ───────────────────────────────────────────────────────────────
+# khanacademy.org
+# scratch.mit.edu
+# code.org
+# duolingo.com
+# brainpop.com
+
+# ── School / homework ─────────────────────────────────────────────────────────
+# wikipedia.org
+# wolframalpha.com
+
+# ── Add your entries below ────────────────────────────────────────────────────

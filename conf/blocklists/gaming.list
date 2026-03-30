@@ -1,0 +1,65 @@
+# childwaf blocklist – Online Gaming Platforms
+#
+# Covers major PC, console, and browser gaming platforms.
+# Remove lines for services you wish to allow.
+
+# ── PC gaming stores / launchers ─────────────────────────────────────────────
+store.steampowered.com
+steampowered.com
+steamcommunity.com
+steamgames.com
+epicgames.com
+origin.com
+ea.com
+ubisoft.com
+uplay.com
+gog.com
+battle.net
+blizzard.com
+riotgames.com
+leagueoflegends.com
+valorant.com
+bethesda.net
+
+# ── Browser / casual games ────────────────────────────────────────────────────
+roblox.com
+robloxlabs.com
+poki.com
+miniclip.com
+coolmathgames.com
+addictinggames.com
+agame.com
+games.co.uk
+friv.com
+y8.com
+kizi.com
+gameflare.com
+
+# ── Minecraft ─────────────────────────────────────────────────────────────────
+minecraft.net
+mojang.com
+minecraftservices.com
+
+# ── Console platforms ─────────────────────────────────────────────────────────
+playstation.com
+playstation.net
+sonyentertainmentnetwork.com
+xbox.com
+xboxlive.com
+nintendo.com
+nintendo.net
+
+# ── Game streaming / cloud gaming ────────────────────────────────────────────
+geforcenow.com
+stadia.google.com
+boosteroid.com
+shadow.tech
+xcloud.microsoft.com
+
+# ── Esports / gaming communities ──────────────────────────────────────────────
+twitch.tv       # also in streaming.list
+ign.com
+gamespot.com
+polygon.com
+kotaku.com
+gamesradar.com

@@ -1,0 +1,49 @@
+# childwaf blocklist – Adult / Explicit Content
+#
+# This list is intentionally kept short as a starting point.
+# For comprehensive adult-content filtering, supplement this list with one of
+# these well-maintained community sources:
+#
+#   • StevenBlack/hosts:  https://github.com/StevenBlack/hosts
+#     (choose the "fakenews-gambling-porn" or "porn-only" variant)
+#
+#   • CleanBrowsing DNS (use as upstream in dnsmasq instead of 8.8.8.8):
+#     185.228.168.168  –  Family Filter
+#
+#   • DNS0 Kids (EU):  35.196.37.78
+#
+# Format: one domain per line; subdomains are included automatically by dnsmasq.
+# Lines starting with # are comments.
+
+# ── Representative entries ────────────────────────────────────────────────────
+# Add your own entries below. The dnsmasq ipset= directive covers all
+# subdomains of each listed domain.
+
+# Generic adult content
+pornhub.com
+xvideos.com
+xhamster.com
+xnxx.com
+redtube.com
+youporn.com
+tube8.com
+spankwire.com
+hardsextube.com
+beeg.com
+tnaflix.com
+motherless.com
+extremetube.com
+sleazyneasy.com
+drtuber.com
+
+# Adult streaming / subscription
+onlyfans.com
+fansly.com
+manyvids.com
+clips4sale.com
+
+# Image boards / aggregators with explicit content
+rule34.xxx
+gelbooru.com
+danbooru.donmai.us
+e621.net
